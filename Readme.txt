@@ -23,3 +23,9 @@ print help(sdg.space_curve)
 # to use a function
 sdg.space_curve(...) 
 
+see 
+
+https://github.com/coderofgames/Python-Math/blob/master/Vectors/Lagrangian/Optics.ipynb
+
+at the end of the file for an example usage. Documentation will be complete soon
+
