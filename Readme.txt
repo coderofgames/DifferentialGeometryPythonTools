@@ -14,12 +14,12 @@ Installation
 
 
 #To import the module
-import sgd
+import sdg
 
 #to see help on a function
 # unfortunately due to other dependencies help is not very useful yet.
 print help(sdg.space_curve)
 
 # to use a function
-sgd.space_curve(...) 
+sdg.space_curve(...) 
 
