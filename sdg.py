@@ -15,22 +15,6 @@ from sympy import *
 
 
 
-def basis_vectors(r,u1,u2,u3):
-	drdu1 = diff(r,u1)
-	drdu2 = diff(r,u2)
-	drdu3 = diff(r,u3)
-	drdu1 = simplify( drdu1/drdu1.magnitude() )
-	drdu2 = simplify( drdu2/drdu2.magnitude() )
-	drdu3 = simplify( drdu3/drdu3.magnitude() )
-	return [drdu1, drdu2, drdu3]
-	
-def matrix_from_vector2(e,v1,v2,v3):
-	return Matrix([[v1.dot(e.i),v1.dot(e.j),v1.dot(e.k)],
-				   [v2.dot(e.i),v2.dot(e.j),v2.dot(e.k)],
-				   [v3.dot(e.i),v3.dot(e.j),v3.dot(e.k)]])
-
-def vector_from_matrix(e,v,i):
-	return v[0]*e.i + v[1]*e.j + v[2] * e.k
 
 #=================================================================
 # 1) Fancy Arrow for plotting vectors
@@ -51,6 +35,7 @@ class Arrow3D(FancyArrowPatch):
 #=================================================================     
 # 2) Annotate 3D functions 
 # also from stackoverflow
+# annotate object
 #=================================================================
 class Annotation3D(Annotation):
 	'''Annotate the point xyz with text s'''
@@ -74,6 +59,7 @@ def annotate3D(ax, s, *args, **kwargs):
 	
 #=================================================================   
 # 3) Function to plot the cartesian basis ijk
+# ax is the matplotlib plot.axis()
 #=================================================================
 def PlotBasisCartesian(ax):
 	a = Arrow3D([0, 0], [0, 0], [0, 1], mutation_scale=5, lw=2, arrowstyle="-|>", color="k")
@@ -92,6 +78,12 @@ def PlotBasisCartesian(ax):
 	
 #=================================================================
 # 4) Draw an arrow in 3d space from origin o to point v1, with name and color    
+# ax is the matplotlib plot.axis()
+# o is the initial point
+# v1 is the vector
+# e is the CoordSys3D basis 
+# name is a string e.g. "$\hat{v}$"
+# col is a the color input to Arrow3D
 #=================================================================
 def plot_arrow(ax,o, v1, e, name,col):
 		LX=[float(N(o.dot(e.i))), float(N(v1.dot(e.i) + o.dot(e.i)))]
@@ -104,8 +96,13 @@ def plot_arrow(ax,o, v1, e, name,col):
 			   textcoords='offset points', ha='right',va='bottom')
 
 #=================================================================
-# 5) plot 3 basis vectors at a point o         
-# requires plot_arrow
+# 5) plot 3 basis vectors at a point o 
+# they are automatically labelled e_1,e_2,e_3
+# ax is the matplotlib plot.axis()        
+# o is the initial point
+# v1,v2,v3 are the vectors, 
+# e is the CoordSys3D basis 
+# col is a the color input to Arrow3D
 #=================================================================
 def plot_basis(ax,o,v1,v2,v3,e,col):
 	plot_arrow(ax,o,v1,e,r'$ \hat{e_1}$',col)
@@ -114,10 +111,18 @@ def plot_basis(ax,o,v1,v2,v3,e,col):
 	
 #=================================================================
 ### Tangent vectors to a space curve
+# returns the symbolic derivative with respect to arc length s
+# r is the vector expression e.g. r = r_1*e.i + r_2 * s * e.j + r_3 * s**2 *e.k
+# s is the symbol for arc length
 #=================================================================
 def unit_tangent_natural(r,s):
 	return diff(r,s)
 
+	
+# returns the normalized tangent as a symbolic derivative expression 
+# with respect to t parameter
+# r is the vector expression e.g. r = r_1(t)*e.i + r_2(t) * e.j + r_3( t) *e.k
+# t is the symbol for time. 	
 def unit_tangent_time(r,t):
 	drdt = unit_tangent_natural(r,t)
 	return drdt / drdt.magnitude()
@@ -125,17 +130,37 @@ def unit_tangent_time(r,t):
 #=================================================================
 ### Tangent Lines
 #=================================================================
+
+# returns an expression for an equation of a tangent line
+# r is the vector expression e.g. r = r_1(s)*e.i + r_2 (s) * e.j + r_3 (s) *e.k
+# s is the natural parameter (arc length)
+# c is a symbolic constant multiplier	
 def tangent_line_natural(r,s,c):
 	tangent = unit_tangent_natural(r,s)
 	return r + c * tangent
 
+# returns an expression for an equation of a tangent line
+# r is the vector expression e.g. r = r_1(s)*e.i + r_2 (s) * e.j + r_3 (s) *e.k
+# s is the natural parameter (arc length)
+# s0 is a number [0:s] for the point on s
+# c is a symbolic constant multiplier		
+# c0 is a number [0:cmax] for the multiplier
 def tangent_line_natural_at_point(r,s,s0,c,c0):
 	return tangent_line_natural(r,s,c).subs({s:s0,c:c0}) 
 
+# returns an expression for an equation of a tangent line
+# r is the vector expression e.g. r = r_1(t)*e.i + r_2 (t) * e.j + r_3 (t) *e.k
+# t is the symbol for time
+# c is a symbolic constant multiplier		
 def tangent_line_time(r,t,c):
 	tangent = unit_tangent_time(r,t)
 	return r + c * tangent
 
+# r is the vector expression e.g. r = r_1(t)*e.i + r_2 (t) * e.j + r_3 (t) *e.k
+# t is the symbol for time
+# t0 is a number [0:t] for the point on t
+# c is a symbolic constant multiplier		
+# c0 is a number [0:cmax] for the multiplier	
 def tangent_line_time_at_point(r,t,t0,c, c0):
 	return  tangent_line_time(r,t,c).subs({t:t0,c:c0}) 
 
@@ -143,9 +168,10 @@ def tangent_line_time_at_point(r,t,t0,c, c0):
 ### Function to plot a space curve
 #=================================================================
 # ax is the plot axis, 
+# e is the basis
 # r is the curve, 
 # t is the parameter in r, 
-# tt is the numpy parameter range
+# tt is the numpy parameter np.arange[a,b]
 def space_curve(ax, e,  r, t, tt):
 	fx = lambdify( t, r.dot(e.i), "numpy" )
 	fy = lambdify( t, r.dot(e.j), "numpy" )
@@ -157,25 +183,45 @@ def space_curve(ax, e,  r, t, tt):
 #=================================================================
 ### Curvature and Normal Vector
 #=================================================================   
+
+# returns the symbolic expression for the curvature vector wrt s
+# r is the vector expression e.g. r = r_1(s)*e.i + r_2(s) * e.j + r_3 (s) *e.k
+# s is the symbol for arc length parameter
 def curv_vec_natural(r, s):
 	tangent = unit_tangent_natural(r,s)
 	return diff(tangent, s)
 
+# returns the symbolic expression for the curvature vector wrt s
+# tangent is the tangent vector with s as a parameter
+# s is the symbol for arc length parameter	
 def curv_vec_from_tangent(tangent, s):
 	return diff(tangent,s)
 
+# returns the symbolic expression for magnitude of curvature, kappa
+# r is the vector expression e.g. r = r_1(s)*e.i + r_2(s) * e.j + r_3 (s) *e.k
+# s is the symbol for arc length parameter		
 def curvature_natural(r,s):
 	return curv_vec_natural(r,s).magnitude()
 
+# returns the symbolic expression for magnitude of curvature, kappa
+# k is the curvature vector
 def curv_mag(k):
 	return k.magnitude()
 
+# returns the symbolic expression for radius of curvature
+# r is the vector expression e.g. r = r_1(s)*e.i + r_2(s) * e.j + r_3 (s) *e.k
+# s is the symbol for arc length parameter	
 def rad_of_curv_natural(r,s):
 	return 1/curvature_natural(r,s)
 
+# returns the symbolic expression for radius of curvature
+# k is the curvature vector	
 def rad_of_curv_from_curv_vec(k):
 	return 1/curv_mag(k)
 
+# returns the symbolic expression for the curvature vector wrt t
+# r is the vector expression e.g. r = r_1(t)*e.i + r_2(t) * e.j + r_3 (t) *e.k
+# t is the symbol for the time parameter		
 def curv_vec_time(r,t):
 	drdt = diff(r,t)
 	drdt_mag = drdt.magnitude()
@@ -183,17 +229,28 @@ def curv_vec_time(r,t):
 	dTdt = diff(tangent,t)
 	return dTdt / drdt_mag
 
+# returns the symbolic expression for the normal vector wrt t
+# r is the vector expression e.g. r = r_1(t)*e.i + r_2(t) * e.j + r_3 (t) *e.k
+# t is the symbol for the time parameter		
 def normal_vec_time(r,t):
 	k = curve_vec_time(r,t)
 	return k/k.magnitude()
 
+# returns the symbolic expression for the principal normal vector wrt s
+# r is the vector expression e.g. r = r_1(s)*e.i + r_2(s) * e.j + r_3 (s) *e.k
+# s is the symbol for the natural parameter		
 def principle_normal_natural(r,s):
 	k = curv_vec_natural(r,s)
 	return k/k.magnitude()
 
+# returns the symbolic expression for the principal normal vector
+# k is the curvature vector		
 def principle_normal_from_curv_vec(k):
 	return k / k.magnitude()
 
+# returns the symbolic expression for the principal normal vector
+# tangent is the tangent vector
+# s is the symbol for the natural parameter			
 def principle_normal_from_tangent(tangent,s):
 	k = diff(tangent,s)
 	return k / k.magnitude()
@@ -201,6 +258,9 @@ def principle_normal_from_tangent(tangent,s):
 #=================================================================
 ### Curvature of a space curve
 #=================================================================  
+# returns the symbolic expression for the magnitude or the curvature wrt t
+# r is the vector expression e.g. r = r_1(t)*e.i + r_2(t) * e.j + r_3 (t) *e.k
+# t is the symbol for the time parameter	
 def curvature_time(r,t):
 	rprime1 = diff(r,t)
 	rprime2 = diff(rprime1,t)
@@ -209,14 +269,27 @@ def curvature_time(r,t):
 #=================================================================
 ### Osculating plane
 #=================================================================  
+
+# returns the symbolic expression for the normal plane wrt s at s0
+# r is the vector expression e.g. r = r_1(s)*e.i + r_2(s) * e.j + r_3 (s) *e.k
+# s is the symbol for the natural parameter	
+# s0 is the number [0:s] for a point 
 def normal_plane_natural(r, s, s0):
 	tangent = unit_tangent_natural(r,s)
 	return (r-r.subs({s:s0})).dot(tangent.subs({s:s0}))
 
+# returns the symbolic expression for the normal plane wrt t at t0
+# r is the vector expression e.g. r = r_1(t)*e.i + r_2(t) * e.j + r_3 (t) *e.k
+# t is the symbol for the time parameter	
+# t0 is the number [0:t] for a point 	
 def normal_plane_time(r,t,t0):
 	tangent = unit_tangent_time(r,t)
 	return (r-r.subs({t:t0})).dot(tangent.subs({t:t0}))
 
+# returns the symbolic expression for the osculating plane wrt s 
+# y is the vector to a point where the plane occurs (symbolic)
+# r is the vector expression e.g. r = r_1(s)*e.i + r_2(s) * e.j + r_3 (s) *e.k
+# s is the symbol for the natural parameter		
 def osculating_plane_natural(y,r,s):
 	tangent = diff(r,s)
 	normal = diff(tangent,s)
@@ -224,6 +297,13 @@ def osculating_plane_natural(y,r,s):
 	bi = tangent.cross(normal)
 	return (y-r).dot(bi)
 
+# Plot's a plane using matplotlib
+# ax is the plot axis 
+# e is the CoordSys3D 
+# r1 is the vector to the point
+# tn1 is the tangent to the curve traced by r1 at the point
+# nm1 is the normal to the curve traced by r1 at the point
+# X and Y are a matplotlib meshgrid
 def plot_plane(ax,e,r1,tn1,nm1,X,Y):
 	ax.plot_surface( float(r1.dot(e.i)) + X * float(tn1.dot(e.i)) + Y * float(nm1.dot(e.i)),
 					float(r1.dot(e.j)) + X * float(tn1.dot(e.j)) + Y * float(nm1.dot(e.j)),
@@ -231,7 +311,10 @@ def plot_plane(ax,e,r1,tn1,nm1,X,Y):
 
 # Given a point and normal, this code finds two vectors perpendicular to the normal and 
 # constructs the plane
-
+# ax is the matplotlib plot.axis()
+# e is the CoordSys3D
+# P is the point as a symbolic vector with numerical components
+# N is the normal as a symbolic vector with numerical components 
 def plot_plane_from_point_normal(ax, e, P, N):
 	a_1, a_2, a_3 = symbols("a_1, a_2, a_3")
 	b_1, b_2, b_3 = symbols("b_1, b_2, b_3")
@@ -336,30 +419,52 @@ def plot_plane_from_point_normal(ax, e, P, N):
 #=================================================================
 ### Binormal Vector
 #=================================================================
+
+# returns the symbolic expression for the binormal vector wrt s 
+# r is the vector expression e.g. r = r_1(s)*e.i + r_2(s) * e.j + r_3 (s) *e.k
+# s is the symbol for the natural parameter	
 def binormal_natural(r,s):
 	tangent = diff(r,s)
 	norm = diff(tangent,s)
 	norm = norm/norm.magnitude()
 	return tangent.cross(normal)
 
-def binormal_natural_from_tangent(tanget,s):
+# returns the symbolic expression for the binormal vector wrt s 
+# tangent is the tangent vector as a function of natural parameter s
+# s is the symbol for the natural parameter		
+def binormal_natural_from_tangent(tangent,s):
 	norm = diff(tangent,s)
 	norm = norm/norm.magnitude()
 	return tangent.cross(normal)
 
+# returns the symbolic expression for the binormal from unit tangent and unit normal	
 def binormal_from_tangent_normal(tanget,normal):
 	return tangent.cross(normal)
 
+# returns the symbolic expression for the binormal line with s as parameter
+# r is the vector expression e.g. r = r_1(s)*e.i + r_2(s) * e.j + r_3 (s) *e.k
+# s is the natural parameter (arc length)
+# c is a symbolic constant multiplier	
 def binormal_line(r,s,c):
 	bi = binormal_natural(r,s)
 	return r + c*bi
 
+# returns the symbolic expression for the binormal line with s as parameter at point s0
+# r is the vector expression e.g. r = r_1(s)*e.i + r_2(s) * e.j + r_3 (s) *e.k
+# s is the natural parameter (arc length)
+# s0 is a number on the interval [0:s]
+# c is a symbolic constant multiplier		
+# s0 is a number defining the length of the line
 def binormal_line_at_point(r,s,s0,c,c0):
 	return binormal_line(r,s,c).subs({s:s0,c:c0})
 
 #=================================================================
 ### Torsion
 #=================================================================
+
+# returns the symbolic expression for the torsion wrt s 
+# r is the vector expression e.g. r = r_1(s)*e.i + r_2(s) * e.j + r_3 (s) *e.k
+# s is the symbol for the natural parameter	
 def torsion_natural(r,s):
 	tangent = unit_tangent_natural(r,s)
 	normal = diff(tangent,s)
@@ -368,6 +473,9 @@ def torsion_natural(r,s):
 	dbds = diff(binormal, s)
 	return -dbds.dot(normal)
 
+# returns the symbolic expression for the torsion wrt t
+# r is the vector expression e.g. r = r_1(t)*e.i + r_2(t) * e.j + r_3 (t) *e.k
+# t is the symbol for the time parameter	
 def torsion_time(r,t):
 	rprime1 = diff(r,t)
 	rprime2 = diff(rprime1,t)
@@ -376,16 +484,26 @@ def torsion_time(r,t):
 	den = rprime1.cross(rprime2).magnitude() 
 	return num / (den**2)
 
-	
+# returns the symbolic expression for the torsion wrt s
+# tangent is vector function of s
+# normal is a vector function of s
+# t is the symbol for the time parameter		
 def torsion_from_tangent_normal(tangent,normal,s):
 	binormal = tangent.cross(normal)
 	dbds = diff(binormal, s)
 	return -dbds.dot(normal)
 
+# returns the symbolic expression for the torsion wrt s
+# tangent is vector function of s
+# binormal is a vector function of s
+# t is the symbol for the time parameter	
 def torsion_from_normal_binormal(normal,binormal,s):
 	dbds = diff(binormal, s)
 	return -dbds.dot(normal)
 
+# returns the symbolic expression for the derivative of binormal wrt s 
+# r is the vector expression e.g. r = r_1(s)*e.i + r_2(s) * e.j + r_3 (s) *e.k
+# s is the symbol for the natural parameter		
 def dbds_natural(r,s):
 	tangent = unit_tangent_natural(r,s)
 	normal = diff(tangent,s)
@@ -393,6 +511,9 @@ def dbds_natural(r,s):
 	binormal = tangent.cross(normal)
 	return diff(binormal, s)
 
+# returns the symbolic expression for the torsion  
+# dbds is the derivative of binormal wrt s
+# normal is the normal vector as a function of s	
 def torsion_from_dbds_normal(dbds,normal):
 	return -dbds.dot(normal)
 
@@ -400,13 +521,30 @@ def torsion_from_dbds_normal(dbds,normal):
 #=================================================================
 ### plot frenet frame  
 #=================================================================
+
+# plots 3 arrows
+# ax is the matplotlib plot.axis()
+# o is the point where the frame will appear
+# T is a unit Tangent vector
+# N is a unit Normal vector
+# e is the CoordSys3D
+# col is the color of the vector
 def plot_frenet_frame(ax,o,T,N,e,col):
 	plot_arrow(ax,o,T,e,r'$ \hat{T}$',col)
 	plot_arrow(ax,o,N,e,r'$ \hat{N}$',col)
 	B = T.cross(N)
 	B = B/ B.magnitude()
 	plot_arrow(ax,o,B,e,r'$ \hat{B}$',col)
+
 	
+# ax is the matplotlib plot.axis()
+# r is the point where the frame will appear r=r(t)
+# tangent is a unit Tangent vector as a function of time t
+# normal is a unit normal vector as a function of time t
+# binormal is a unit binormal vector as a function of time t
+# e is the CoordSys3D
+# time_point is a point on the interval t=[t0:tmax] 
+# X,Y are a numpy meshgrid	
 def plot_frenet_frame_2(ax, r, tangent, normal, binormal,e,time_point, X, Y):
 	plot_arrow(ax,r.subs({t:time_point}), tangent.subs({t:time_point}), e, '','r')
 	plot_arrow(ax,r.subs({t:time_point}), normal.subs({t:time_point}), e, '','g')
@@ -425,38 +563,74 @@ def plot_frenet_frame_2(ax, r, tangent, normal, binormal,e,time_point, X, Y):
 		 float(r1.dot(e.j)) + X * float(bn1.dot(e.j)) + Y * float(nm1.dot(e.j)),
 		 float(r1.dot(e.k))+ X * float(bn1.dot(e.k)) + Y * float(nm1.dot(e.k)),  color = 'r',alpha = 0.1)
 	
+# returns a vector function for a mongepatch
+# x*e.i + y*e.j + f(x,y)*e.k
+# x and y are both symbols for coordinates 
+# fxy is a function of x and y, such that z=f(x,y) 	
+# e is the CoordSys3D
 def monge_patch_z(x,y,fxy, e):
 	return x*e.i + y*e.j + fxy * e.k
 	
+# plots a surface given 
+# ax is the Matplotlib plot.axis()
+# f is a function of x and y defining a surface such that z=f(x,y)
+# x,y are symbols in f
+# X,Y are a numpy meshgrid
+# rs = rstride (row stride) for the matplotlib function ax.plot_surface
+# cs = cstride (column stride) for the matplotlib function ax.plot_surface
 def space_surface(ax, f, x, y, X,Y,rs,cs):
 	fxy = lambdify( (x,y), f, "numpy" )
 	# plot the lambda funcs
 	ax.plot_surface(X,Y, fxy(X,Y),rstride=rs, cstride=cs,color='g',alpha=1,linewidth=0.0,antialiased=False)
 	
+# This returns a peaks function
+# X,Y are numbers (or symbols)
 def computePeaks( X, Y ):
 	return 3*((1-X)**2)*exp(-(X**2) - (Y+1)**2) - 10*(X/5 - X**3 - Y**5)*exp(-X**2-Y**2) - (1/3)*exp(-(X+1)**2 - Y**2);
 
-def surface_normal(s,u,v):
-	su_cross_sv = diff(s,u).cross(diff(s,v))
-	return su_cross_sv
+# returns a surface normal 
+# r is a vector function defining a surface (e.g. monge patch)
+# u is a paramter (r(u,v) can be a re-parameterization of r)
+# v is a parameter for r
+def surface_normal(r,u,v):
+	ru_cross_rv = diff(r,u).cross(diff(r,v))
+	return ru_cross_rv
 
-def surface_unit_normal(s,u,v):
-	su_cross_sv = diff(s,u).cross(diff(s,v))
-	return su_cross_sv/su_cross_sv.magnitude()
+# returns a unit surface normal 
+# r is a vector function defining a surface (e.g. monge patch)
+# u is a paramter (r(u,v) can be a re-parameterization of r)
+# v is a parameter for r	
+def surface_unit_normal(r,u,v):
+	ru_cross_rv = diff(r,u).cross(diff(r,v))
+	return ru_cross_rv/ru_cross_rv.magnitude()
 	
+# returns E, a first fundamental coefficient
+# x is a vector function defining a surface (e.g. monge patch)
+# u is a paramter (x(u,v) can be a re-parameterization of x)	
 def compute_E(x,u):
 	xu = diff(x,u)
 	return xu.dot(xu)
 
+# returns F, a first fundamental coefficient
+# x is a vector function defining a surface (e.g. monge patch)
+# u is a paramter (x(u,v) can be a re-parameterization of x)
+# v is a parameter for x		
 def compute_F(x,u,v):
 	xu = diff(x,u)
 	xv = diff(x,v)
 	return xu.dot(xv)
 
+# returns G, a first fundamental coefficient
+# x is a vector function defining a surface (e.g. monge patch)
+# v is a paramter (x(u,v) can be a re-parameterization of x)		
 def compute_G(x,v):
 	xv = diff(x,v)
 	return xv.dot(xv)
 
+# returns a list containing the first fundamental coefficients
+# x is a vector function defining a surface (e.g. monge patch)
+# u is a paramter (x(u,v) can be a re-parameterization of x)
+# v is a parameter for x		
 def first_fundamental_form(x,u,v):
 	EFG = zeros(3,1)
 	EFG[0] = compute_E(x,u)
@@ -464,47 +638,81 @@ def first_fundamental_form(x,u,v):
 	EFG[2] = compute_G(x,v)
 	return EFG	
 	
+# returns the integral of surface area 
+# x is a vector function defining a surface (e.g. monge patch)
+# u is a paramter (x(u,v) can be a re-parameterization of x)
+# v is a parameter for x		
+# u_min,u_max are the limits in the u parameter
+# v_min,v_max are the limits in the v parameter
 def surface_area_patch( x, u, v, u_min, u_max, v_min, v_max ):
 	EFG = first_fundamental_form(x, u, v)
 	xu_cross_xv = simplify(EFG[0]*EFG[2]- EFG[1]**2) #
 	int_1 = simplify( integrate(sqrt(xu_cross_xv), (u, u_min, u_max)).doit())
 	return N(integrate( int_1,(v,v_min,v_max)).doit())	
 
-def compute_L_1(s,u,v):
-	n = surface_unit_normal(s,u,v)
+# return L the second fundamental coefficient	
+# x is a vector function defining a surface (e.g. monge patch)
+# u is a paramter (x(u,v) can be a re-parameterization of x)
+# v is a parameter for x		
+def compute_L_1(x,u,v):
+	n = surface_unit_normal(x,u,v)
 	nu = diff(n,u)
-	xu = diff(s,u)
+	xu = diff(x,u)
 	return -xu.dot(nu)
 	
-def compute_M_1(s,u,v):
-	n = surface_unit_normal(s,u,v)
+# return M the second fundamental coefficient	
+# x is a vector function defining a surface (e.g. monge patch)
+# u is a paramter (x(u,v) can be a re-parameterization of x)
+# v is a parameter for x		
+def compute_M_1(x,u,v):
+	n = surface_unit_normal(x,u,v)
 	nu = diff(n,u)
 	nv = diff(n,v)
-	xu = diff(s,u)
-	xv = diff(s,v)
+	xu = diff(x,u)
+	xv = diff(x,v)
 	return (S(1)/2)*( -xu.dot(nv)-xv.dot(nu))
 
-def compute_N_1(s,u,v):
-	n = surface_unit_normal(s,u,v)
+# return N the second fundamental coefficient	
+# x is a vector function defining a surface (e.g. monge patch)
+# u is a paramter (x(u,v) can be a re-parameterization of x)
+# v is a parameter for x		
+def compute_N_1(x,u,v):
+	n = surface_unit_normal(x,u,v)
 	nv = diff(n,v)
-	xv = diff(s,v)
+	xv = diff(x,v)
 	return -xv.dot(nv)
 
-def compute_L_2(s,u,v):
-	n = surface_unit_normal(s,u,v)
-	xuu = diff(s,u,2)
+# return L the second fundamental coefficient	
+# x is a vector function defining a surface (e.g. monge patch)
+# u is a paramter (x(u,v) can be a re-parameterization of x)
+# v is a parameter for x		
+def compute_L_2(x,u,v):
+	n = surface_unit_normal(x,u,v)
+	xuu = diff(x,u,2)
 	return xuu.dot(n)
 	
-def compute_M_2(s,u,v):
-	n = surface_unit_normal(s,u,v)
-	xuv = diff(diff(s,v),u)
+# return M the second fundamental coefficient	
+# x is a vector function defining a surface (e.g. monge patch)
+# u is a paramter (x(u,v) can be a re-parameterization of x)
+# v is a parameter for x	
+def compute_M_2(x,u,v):
+	n = surface_unit_normal(x,u,v)
+	xuv = diff(diff(x,v),u)
 	return xuv.dot(n)
 
-def compute_N_2(s,u,v):
-	n = surface_unit_normal(s,u,v)
-	xvv = diff(diff(s,v),v)
+# return N the second fundamental coefficient	
+# x is a vector function defining a surface (e.g. monge patch)
+# u is a paramter (x(u,v) can be a re-parameterization of x)
+# v is a parameter for x		
+def compute_N_2(x,u,v):
+	n = surface_unit_normal(x,u,v)
+	xvv = diff(diff(x,v),v)
 	return xvv.dot(n)
 
+# returns a list containing the coefficients of the second fundamental form	
+# x is a vector function defining a surface (e.g. monge patch)
+# u is a paramter (x(u,v) can be a re-parameterization of x)
+# v is a parameter for x		
 def second_fundamental_form(x,u,v):
 	LMN = zeros(3,1)
 	LMN[0] = compute_L_1(x,u,v)
@@ -512,6 +720,10 @@ def second_fundamental_form(x,u,v):
 	LMN[2] = compute_N_1(x,u,v)
 	return LMN
 
+# returns a list containing the coefficients of the second fundamental form	
+# x is a vector function defining a surface (e.g. monge patch)
+# u is a paramter (x(u,v) can be a re-parameterization of x)
+# v is a parameter for x		
 def second_fundamental_form_version2(x,u,v):
 	LMN = zeros(3,1)
 	LMN[0] = compute_L_2(x,u,v)
@@ -519,42 +731,98 @@ def second_fundamental_form_version2(x,u,v):
 	LMN[2] = compute_N_2(x,u,v)
 	return LMN	
 	
+# computes the quadratic formula
+# returns the roots of an equation a*x**2 + b*x + c = 0
 def quadratic_formula(a,b,c):
 	sols = zeros(2,1)
 	sols[0]=simplify((-b**2 - sqrt(b**2-4*a*c))/(2*a))
 	sols[1]=simplify((-b**2 + sqrt(b**2-4*a*c))/(2*a))
 	return sols
 	
+# returns a vector containing a rectangular vector as a function of spherical coords
+# e is the CoordSys3D
+# Y is a matrix [r,phi,theta]	
 def rect_vector_of_sphere_coords(e, Y):
 	return Y[0] * cos (Y[2]) * sin(Y[1]) * e.i+ Y[0] * sin (Y[2]) * sin(Y[1]) * e.j +  Y[0] * cos(Y[1]) * e.k
 
+# returns a vector containing a rectangular vector as a function of cylindrical coords
+# e is the CoordSys3D
+# Y is a matrix [r,phi,z]		
 def rect_vector_of_cylinder_coords(e, Y):
 	return Y[0] * cos (Y[1]) * e.i+ Y[0] * sin (Y[1]) * e.j +  Y[2] * e.k
 
+# returns a vector containing a rectangular vector as a function of parabolic cylindrical coords
+# e is the CoordSys3D
+# Y is a matrix [y_1, y_2, y_3]		
 def rect_vector_of_parab_cylinder_coords(e, Y):
 	return (S(1)/2) (Y[0]**2 - Y[1]**2 ) * e.i+ Y[0] * Y[1] * e.j +  Y[2] * e.k
 
+# returns a vector containing a rectangular vector as a function of parabololoidal coords
+# e is the CoordSys3D
+# Y is a matrix [y_1, y_2, y_3]		
 def rect_vector_of_paraboloidal_coords(e, Y):
 	return Y[0]*Y[1]*cos(Y[2]) * e.i+ Y[0]*Y[1]*sin(Y[2])  * e.j +  (S(1)/2) (Y[0]**2 - Y[1]**2 )* e.k
 
+# returns a vector containing a rectangular vector as a function of elliptic cylindrical coords
+# e is the CoordSys3D
+# Y is a matrix [y_1, y_2, y_3]			
 def rect_vector_of_elliptic_cylindrical_coords(e, Y):
 	return cosh(Y[0]) *cos(Y[1])* e.i+  sinh(Y[0]) *sin(Y[1])* e.j +  Y[2]* e.k
 
+# returns a vector containing a rectangular vector as a function of elliptic cylindrical coords
+# e is the CoordSys3D
+# Y is a matrix [y_1, y_2, y_3]			
 def rect_vector_of_elliptic_cylindrical_coords(e, Y):
 	return cosh(Y[0]) *cos(Y[1])* e.i+  sinh(Y[0]) *sin(Y[1])* e.j +  Y[2]* e.k
 
 
-
+# converts a vector v in basis e into a matrix
+# e is the CoordSys3D
+# v is the vector
 def vector_to_matrix_form(e,v):
 	return Matrix([v.dot(e.i), v.dot(e.j),v.dot(e.k)])
+	
+# r is a vector function of coords i.e. rect_vector_of_sphere_coords()
+# u1,u2,u3 are the coords 
+def basis_vectors(r,u1,u2,u3):
+	drdu1 = diff(r,u1)
+	drdu2 = diff(r,u2)
+	drdu3 = diff(r,u3)
+	drdu1 = simplify( drdu1/drdu1.magnitude() )
+	drdu2 = simplify( drdu2/drdu2.magnitude() )
+	drdu3 = simplify( drdu3/drdu3.magnitude() )
+	return [drdu1, drdu2, drdu3]
+	
+## e is the CoordSys3D
+# v1, v2, v3 are the symbolic basis vectors
+# e.g v1 = 1*e.i + 0*e.j+ 0*e.k   
+def matrix_from_vector2(e,v1,v2,v3):
+	return Matrix([[v1.dot(e.i),v1.dot(e.j),v1.dot(e.k)],
+				   [v2.dot(e.i),v2.dot(e.j),v2.dot(e.k)],
+				   [v3.dot(e.i),v3.dot(e.j),v3.dot(e.k)]])
 
+# e is the coordSys3d
+# v is the vector
+# i is reserved
+def vector_from_matrix(e,v,i):
+	return v[0]*e.i + v[1]*e.j + v[2] * e.k	
 
+# V and C are coordinate systems 	
+# V = [x_1,x_2,x_3]
+# C = [y_1,y_2,y_3]
+# returns Jacobian matrix of d x_i / d y_j
 def Jacobian_WRT_coords(V,C):
 	return V.jacobian(C)	
 
-	
+# computes a Christoffel symbol 	
+# G is the metric d*d
+# a is the a index, [0:d]
+# b is the b index [0:d]
+# c is the c index [0:d]
+# X is a matrix of coords X = [x_1,..., x_d] 
 def christoffel_symbol_1(G, a, b, c, X):
 	return (S(1)/2)*(diff(G[b,c],X[a]) +diff(G[c,a],X[b])-diff(G[a,b],X[c]))
+	
 	
 def christoffel_symbol_2(G, p, a, b, X):
 	output = 0
@@ -581,9 +849,9 @@ def christoffel_symbol_2_2(G, p, a, b, X, d, G_inv):
 # above does not extend to higher dimensions, neither does
 # the inner function christoffel_symbol_2 (see above)
 # and so
-# metric is the metric
+# metric is the metric d*d
 # d is the dimension of the space
-# basis is the basis from which the metric was derived
+# basis is the basis from which the metric was derived [x_1, ... x_d]
 # metric_inv is the optional inverse of the metric
 def compute_christoffel_symbols_2(metric, d, basis, metric_inv):
 	gamma2 = []
@@ -598,6 +866,8 @@ def compute_christoffel_symbols_2(metric, d, basis, metric_inv):
 				
 	return gamma2
 	
+## 
+## 
 def absolute_acceleration(DY, D2Y, gamma_2, d ):
 	acc = zeros(d,1)
 	for i in range(0,d):
@@ -608,6 +878,10 @@ def absolute_acceleration(DY, D2Y, gamma_2, d ):
 	return acc	
 	
 from sympy import Array
+
+## gamma_2 is the set of christoffel symbols for the metric_
+## X is the coord system X= [X_1,... X_d]  
+## d is the number of dimensions of the metric e.g 4 
 def Riemann_Tensor_2( gamma_2, X, d):
 	# construct an array followed by a shape tuple
 	# the array is of size d^4 and shape d,d,d,d

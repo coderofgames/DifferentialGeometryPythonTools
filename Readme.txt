@@ -27,5 +27,5 @@ see
 
 https://github.com/coderofgames/Python-Math/blob/master/Vectors/Lagrangian/Optics.ipynb
 
-at the end of the file for an example usage. Documentation will be complete soon
+at the end of the file for an example usage. 
 
