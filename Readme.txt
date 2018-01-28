@@ -25,7 +25,7 @@ sdg.space_curve(...)
 
 see 
 
-https://github.com/coderofgames/DifferentialGeometryPythonTools/blob/master/sdg_usage.ipynb
+https://nbviewer.jupyter.org/github/coderofgames/DifferentialGeometryPythonTools/blob/master/sdg_usage.ipynb
 
 at the end of the file for an example usage. 
 
