@@ -11,8 +11,7 @@ from mpl_toolkits.mplot3d import proj3d
 from matplotlib import pylab
 from matplotlib.text import Annotation
 from sympy.vector import *
-from sympy import *
-
+from sympy import * 
 
 
 
@@ -808,11 +807,21 @@ def vector_from_matrix(e,v,i):
 	return v[0]*e.i + v[1]*e.j + v[2] * e.k	
 
 # V and C are coordinate systems 	
-# V = [x_1,x_2,x_3]
+# V = [x_1,x_2,x_3] where x_1=x_1(y_1,y_2,y_3) e.g y_1*cos(y_2) etc
 # C = [y_1,y_2,y_3]
 # returns Jacobian matrix of d x_i / d y_j
 def Jacobian_WRT_coords(V,C):
 	return V.jacobian(C)	
+
+# A is a Jacobian matrix	
+def metric_from_jacobian(A):
+	return A.T * A
+	
+# computes the metric directly from the coords
+def metric_from_coords(V,C):
+	return metric_from_jacobian(Jacobian_WRT_coords(V,C))
+	
+
 
 # computes a Christoffel symbol 	
 # G is the metric d*d
