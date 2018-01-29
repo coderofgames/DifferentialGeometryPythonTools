@@ -823,23 +823,6 @@ def metric_from_coords(V,C):
 	
 
 
-# computes a Christoffel symbol 	
-# G is the metric d*d
-# a is the a index, [0:d]
-# b is the b index [0:d]
-# c is the c index [0:d]
-# X is a matrix of coords X = [x_1,..., x_d] 
-def christoffel_symbol_1(G, a, b, c, X):
-	return (S(1)/2)*(diff(G[b,c],X[a]) +diff(G[c,a],X[b])-diff(G[a,b],X[c]))
-	
-	
-def christoffel_symbol_2(G, p, a, b, X):
-	output = 0
-	G_inv = G.inverse_ADJ()
-	for c in range(0,3):
-		output += G_inv[p,c]*(S(1)/2)*(diff(G[b,c],X[a]) +diff(G[c,a],X[b])-diff(G[a,b],X[c]))
-	return output
-	
 # G is the metric
 # p is the superscript
 # a,b are the subscript indices
@@ -872,9 +855,32 @@ def compute_christoffel_symbols_2(metric, d, basis, metric_inv):
 			for c in range(0,d):
 				# puts this in matrix form with fancy text and indexing
 				gamma2[a][b,c] = simplify(christoffel_symbol_2_2(metric, a, b, c, basis, d, metric_inv))
-				
+	
 	return gamma2
 	
+# this was added because the original christoffel symbol code
+# above does not extend to higher dimensions, neither does
+# the inner function christoffel_symbol_2 (see above)
+# and so
+# metric is the metric d*d
+# d is the dimension of the space
+# basis is the basis from which the metric was derived [x_1, ... x_d]
+# metric_inv is the optional inverse of the metric
+def compute_christoffel_symbols_3(metric, d, basis, metric_inv):
+	gamma2 = []
+	for i in range(0,d):
+		gamma2.append(zeros(d,d))
+		
+	for a in range(0,d):
+		for b in range(0,d):
+			for c in range(0,d):
+				# puts this in matrix form with fancy text and indexing
+				gamma2[a][b,c] = simplify(christoffel_symbol_2_2(metric, a, b, c, basis, d, metric_inv))
+	
+	
+	return gamma2
+	
+from sympy import Array	
 ## 
 ## 
 def absolute_acceleration(DY, D2Y, gamma_2, d ):
@@ -886,8 +892,22 @@ def absolute_acceleration(DY, D2Y, gamma_2, d ):
 				acc[i] += gamma_2[i][j,s]*DY[j]*DY[s]
 	return acc	
 	
-from sympy import Array
+# untested, returns the physical acceleration corrected by obtaining
+# the scale factors from the metric
+# A is the absolute acceleration
+# g is the metric	
+def physical_acceleration_from_absolute_acceleration(abs_accel,g,d):
+	abs_accel_corrected=zeros(d,1)
 
+	for i in range(0,d):
+		abs_accel_corrected[i] = simplify(sqrt(g[i,i])*abs_accel[i]) 
+	return abs_accel_corrected
+	
+
+	
+
+## returns the Riemann tensor with 1 contravariant index (the first) and 
+## 3 covariant indices, accessed with R[a,b,c,d]
 ## gamma_2 is the set of christoffel symbols for the metric_
 ## X is the coord system X= [X_1,... X_d]  
 ## d is the number of dimensions of the metric e.g 4 
@@ -906,3 +926,30 @@ def Riemann_Tensor_2( gamma_2, X, d):
 						R -= gamma_2[a][mu,beta]*gamma_2[beta][nu,i]
 					Riem[a,nu,mu,i] = simplify(trigsimp(R))
 	return Riem
+	
+## new function, untested
+# R_abcd : Reimann tensor ({a} contravariant, {bcd} covariant)
+# d dimension of the space
+# returns Ricci Tensor contracted on a and c
+# note: destroys Riemann tensor in attempt to return Weyl tensor.
+def compute_ricci_tensor(R_abcd, d):
+    R_uv = MutableDenseNDimArray(zeros(d*d),(d,d))
+    for u in range(0,d):
+        for v in range(0,d):
+            for a in range(0,d):
+                for b in range(0,d):
+                    if a == b:
+                        R_uv[u,v] = R_uv[u,v] + R_abcd[a,u,b,v]
+                        R_abcd[a,u,b,v] = 0 ## This presumabbly returns a weyl tensor?
+    return R_uv
+	
+## R_uv : Ricci Tensor
+# d dimension ofthe space	
+def compute_ricci_scalar(R_uv,d):
+	R=0
+	for u in range(0,d):
+		for v in range(0,d):
+			if u==v:
+				R += R_uv[u,v]
+	return R
+
