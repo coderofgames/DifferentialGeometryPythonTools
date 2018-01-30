@@ -988,6 +988,7 @@ def compute_ricci_tensor(R_abcd, d):
                 for b in range(0,d):
                     if a == b:
                         R_uv[u,v] += R_abcd[a,u,b,v]
+			R_uv[u,v] = simplify(R_uv[u,v])
     return R_uv
 	
 ## R_uv : Ricci Tensor
@@ -1000,12 +1001,41 @@ def compute_ricci_scalar(R_uv,g_inv,d):
 			if u==v:
 				R += R_uv2[u,v]
 	return R
-
-def compute_weyl_tensor(R_abcd, R_uv, R, gamma, g,d):
+	
+def riemann_tensor_to_covariant(R_a_bcd,g,d):
+	R_abcd = MutableDenseNDimArray(zeros(d*d*d*d),(d,d,d,d))
+	for a in range(0,d):
+		for b in range(0,d):
+			for c in range(0,d):
+				for f in range(0,d):
+					for e in range(0,d):
+						R_abcd[e,b,c,f] += simplify(g[e,a]*R_a_bcd[a,b,c,f])
+	return R_abcd
+	
+def raise_or_lower_index_on_4th_order_tensor(A_abcd,g,d,index):
+	A_abcd2 = MutableDenseNDimArray(zeros(d*d*d*d),(d,d,d,d))
+	for a in range(0,d):
+		for b in range(0,d):
+			for c in range(0,d):
+				for f in range(0,d):
+					for e in range(0,d):
+						if index == 0:
+							A_abcd2[e,b,c,f] += simplify(g[e,a]*A_abcd[a,b,c,f])
+						if index == 1:
+							A_abcd2[a,e,c,f] += simplify(g[e,b]*A_abcd[a,b,c,f])
+						if index == 2:
+							A_abcd2[a,b,e,f] += simplify(g[e,c]*A_abcd[a,b,c,f])
+						if index == 3:
+							A_abcd2[a,b,c,e] += simplify(g[e,f]*A_abcd[a,b,c,f])				
+	return A_abcd2	
+	
+	
+def compute_weyl_tensor(R_a_bcd, R_uv, R, g,d):
+	R_abcd = riemann_tensor_to_covariant(R_a_bcd, g,d)
 	C = MutableDenseNDimArray(zeros(d*d*d*d),(d,d,d,d))
 	for i in range(0,d):
 		for k in range(0,d):
 			for l in range(0,d):
 				for m in range(0,d):
-					C[i,k,l,m]=R_abcd[i,k,l,m] + (1/(d-2))*(R_uv[i,m]*g[k,l] -R_uv[i,l]*g[k,m] + R_uv[k,l]*g[i,m] - R_uv[k,m]*g[i,l]) + (1/((d-1)*(d-2)))*R*(g[i,l]*g[k,m]-g[i,n]*g[k,l])
+					C[i,k,l,m]=simplify(R_abcd[i,k,l,m] + (1/(d-2))*(R_uv[i,m]*g[k,l] -R_uv[i,l]*g[k,m] + R_uv[k,l]*g[i,m] - R_uv[k,m]*g[i,l]) + (1/((d-1)*(d-2)))*R*(g[i,l]*g[k,m]-g[i,m]*g[k,l]))
 	return C
