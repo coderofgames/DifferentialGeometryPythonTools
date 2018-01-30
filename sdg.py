@@ -917,9 +917,10 @@ def covariant_derivative_contravariant_vector(T, Y, gamma2, d):
 # T : tensor to differentiate (vector as matrix)
 # Y : coordinates
 # DY: first time derivative of coordinates
+# t: time parameter
 # gamma_2: christoffel symbols of the metric
 # d : dimension of the space
-def absolute_derivative(T, Y, DY, gamma_2, d ):
+def absolute_derivative(T, Y, DY, t, gamma_2, d ):
 	DT_i = zeros(d,1)
 	for i in range(0,d):
 		DT_i[i] =  diff(T[i],t)
