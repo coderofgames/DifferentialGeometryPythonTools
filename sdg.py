@@ -979,7 +979,7 @@ def Riemann_Tensor_2( gamma_2, X, d):
 # R_abcd : Reimann tensor ({a} contravariant, {bcd} covariant)
 # d dimension of the space
 # returns Ricci Tensor contracted on a and c
-# note: destroys Riemann tensor in attempt to return Weyl tensor.
+
 def compute_ricci_tensor(R_abcd, d):
     R_uv = MutableDenseNDimArray(zeros(d*d),(d,d))
     for u in range(0,d):
@@ -988,16 +988,24 @@ def compute_ricci_tensor(R_abcd, d):
                 for b in range(0,d):
                     if a == b:
                         R_uv[u,v] += R_abcd[a,u,b,v]
-                        R_abcd[a,u,b,v] = 0 ## This presumabbly returns a weyl tensor?
     return R_uv
 	
 ## R_uv : Ricci Tensor
 # d dimension ofthe space	
-def compute_ricci_scalar(R_uv,d):
+def compute_ricci_scalar(R_uv,g_inv,d):
+	R_uv2 = g_inv * R_uv
 	R=0
 	for u in range(0,d):
 		for v in range(0,d):
 			if u==v:
-				R += R_uv[u,v]
+				R += R_uv2[u,v]
 	return R
 
+def compute_weyl_tensor(R_abcd, R_uv, R, gamma, g,d):
+	C = MutableDenseNDimArray(zeros(d*d*d*d),(d,d,d,d))
+	for i in range(0,d):
+		for k in range(0,d):
+			for l in range(0,d):
+				for m in range(0,d):
+					C[i,k,l,m]=R_abcd[i,k,l,m] + (1/(d-2))*(R_uv[i,m]*g[k,l] -R_uv[i,l]*g[k,m] + R_uv[k,l]*g[i,m] - R_uv[k,m]*g[i,l]) + (1/((d-1)*(d-2)))*R*(g[i,l]*g[k,m]-g[i,n]*g[k,l])
+	return C
