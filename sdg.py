@@ -881,6 +881,39 @@ def compute_christoffel_symbols_3(metric, d, basis, metric_inv):
 	return gamma2
 	
 from sympy import Array	
+
+# T : covariant vector in matrix form
+# Y : coordinates the vector is a function of
+# gamma2: Christoffel symbols of the metric
+# d : dimension of the space
+def Covariant_Derivative_Covariant_Vector(T, Y, gamma2, d):
+    d_r_T_i = zeros(d,d)
+    for r in range(0,d): # free index r
+        for i in range(0,d): # free index j
+            d_r_T_i [i, r] = diff( T[i], Y[r] )
+            for p in range(0,d): # dummy index p
+        
+                # using our vector matrix X=[y_1,y_2, y_3]
+                 d_r_T_i [i, r] -= gamma2 [p][i, r]*T[p] ## perhaps one of the other gamma2 systems
+
+    return d_r_T_i
+
+# T : contravariant vector in matrix form
+# Y : coordinates the vector is a function of
+# gamma2: Christoffel symbols of the metric
+# d : dimension of the space	
+def Covariant_Derivative_Contravariant_Vector(T, Y, gamma2, d):
+    d_r_T_i = zeros(d,d)
+    for r in range(0,d): # free index r
+        for i in range(0,d): # free index j
+            d_r_T_i [i, r] = diff( T[i], Y[r] )
+            for q in range(0,d): # dummy index q
+        
+                # using our vector matrix X=[y_1,y_2, y_3]
+                d_r_T_i [i, r] += gamma2 [i][q, r]*T[q] ## perhaps one of the other gamma2 systems
+            
+    return d_r_T_i
+
 ## 
 ## 
 def absolute_acceleration(DY, D2Y, gamma_2, d ):
@@ -939,7 +972,7 @@ def compute_ricci_tensor(R_abcd, d):
             for a in range(0,d):
                 for b in range(0,d):
                     if a == b:
-                        R_uv[u,v] = R_uv[u,v] + R_abcd[a,u,b,v]
+                        R_uv[u,v] += R_abcd[a,u,b,v]
                         R_abcd[a,u,b,v] = 0 ## This presumabbly returns a weyl tensor?
     return R_uv
 	
