@@ -886,7 +886,7 @@ from sympy import Array
 # Y : coordinates the vector is a function of
 # gamma2: Christoffel symbols of the metric
 # d : dimension of the space
-def Covariant_Derivative_Covariant_Vector(T, Y, gamma2, d):
+def covariant_derivative_covariant_vector(T, Y, gamma2, d):
     d_r_T_i = zeros(d,d)
     for r in range(0,d): # free index r
         for i in range(0,d): # free index j
@@ -902,7 +902,7 @@ def Covariant_Derivative_Covariant_Vector(T, Y, gamma2, d):
 # Y : coordinates the vector is a function of
 # gamma2: Christoffel symbols of the metric
 # d : dimension of the space	
-def Covariant_Derivative_Contravariant_Vector(T, Y, gamma2, d):
+def covariant_derivative_contravariant_vector(T, Y, gamma2, d):
     d_r_T_i = zeros(d,d)
     for r in range(0,d): # free index r
         for i in range(0,d): # free index j
