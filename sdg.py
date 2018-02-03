@@ -60,18 +60,18 @@ def annotate3D(ax, s, *args, **kwargs):
 # 3) Function to plot the cartesian basis ijk
 # ax is the matplotlib plot.axis()
 #=================================================================
-def PlotBasisCartesian(ax):
+def PlotBasisCartesian(ax, font_size=20):
 	a = Arrow3D([0, 0], [0, 0], [0, 1], mutation_scale=5, lw=2, arrowstyle="-|>", color="k")
 	ax.add_artist(a)
 	a = Arrow3D([0, 1], [0, 0], [0, 0], mutation_scale=5, lw=2, arrowstyle="-|>", color="k")
 	ax.add_artist(a)
 	a = Arrow3D([0, 0], [0, 1], [0, 0], mutation_scale=5, lw=2, arrowstyle="-|>", color="k")
 	ax.add_artist(a) 
-	annotate3D(ax, r'$ \hat{i}$', xyz=(1,0,0), fontsize=30, xytext=(-3,4),
+	annotate3D(ax, r'$ \hat{i}$', xyz=(1,0,0), fontsize=font_size, xytext=(-3,4),
 			   textcoords='offset points', ha='right',va='bottom') 
-	annotate3D(ax, r'$ \hat{j}$', xyz=(0,1,0), fontsize=30, xytext=(-3,4),
+	annotate3D(ax, r'$ \hat{j}$', xyz=(0,1,0), fontsize=font_size, xytext=(-3,4),
 			   textcoords='offset points', ha='right',va='bottom') 
-	annotate3D(ax, r'$ \hat{k}$', xyz=(0,0,1), fontsize=30, xytext=(-3,4),
+	annotate3D(ax, r'$ \hat{k}$', xyz=(0,0,1), fontsize=font_size, xytext=(-3,4),
 				   textcoords='offset points', ha='right',va='bottom') 
 	
 	
@@ -303,10 +303,12 @@ def osculating_plane_natural(y,r,s):
 # tn1 is the tangent to the curve traced by r1 at the point
 # nm1 is the normal to the curve traced by r1 at the point
 # X and Y are a matplotlib meshgrid
-def plot_plane(ax,e,r1,tn1,nm1,X,Y):
+# col is the color, e.g. 'b'
+# plane_alpha is sets the transparency value, e.g 0.1
+def plot_plane(ax,e,r1,tn1,nm1,X,Y,col='b', plane_alpha=0.1):
 	ax.plot_surface( float(r1.dot(e.i)) + X * float(tn1.dot(e.i)) + Y * float(nm1.dot(e.i)),
 					float(r1.dot(e.j)) + X * float(tn1.dot(e.j)) + Y * float(nm1.dot(e.j)),
-					float(r1.dot(e.k))+ X * float(tn1.dot(e.k)) + Y * float(nm1.dot(e.k)), color = 'b',alpha = 0.1)
+					float(r1.dot(e.k))+ X * float(tn1.dot(e.k)) + Y * float(nm1.dot(e.k)), color = col,alpha = plane_alpha)
 
 # Given a point and normal, this code finds two vectors perpendicular to the normal and 
 # constructs the plane
