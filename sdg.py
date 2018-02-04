@@ -171,14 +171,26 @@ def tangent_line_time_at_point(r,t,t0,c, c0):
 # r is the curve, 
 # t is the parameter in r, 
 # tt is the numpy parameter np.arange[a,b]
-def space_curve(ax, e,  r, t, tt):
+def space_curve(ax, e,  r, t, tt, col = 'k'):
 	fx = lambdify( t, r.dot(e.i), "numpy" )
 	fy = lambdify( t, r.dot(e.j), "numpy" )
 	fz = lambdify( t, r.dot(e.k), "numpy" )
 
 	# plot the lambda funcs
-	ax.plot(fx(tt),fy(tt),fz(tt))
+	ax.plot(fx(tt),fy(tt),fz(tt),color = col)
 	
+def space_curve_from_vector_matrix(ax,  r, t, tt,col = 'k'):
+	fx = lambdify( t, r[0], "numpy" )
+	fy = lambdify( t, r[1], "numpy" )
+	fz = lambdify( t, r[2], "numpy" )
+	
+	ax.plot(fx(tt),fy(tt),fz(tt),color = col)
+	
+def curve_2d_vector_matrix(ax, r,t,tt,col = 'k'):
+    fx = lambdify( t, r[0], "numpy" )
+    fy = lambdify( t, r[1], "numpy" )
+    # plot the lambda funcs
+    ax.plot(fx(tt),fy(tt),color = col)
 #=================================================================
 ### Curvature and Normal Vector
 #=================================================================   
